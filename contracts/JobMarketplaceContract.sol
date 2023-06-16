@@ -10,12 +10,12 @@ contract JobMarketplaceContract {
         address freelancer;
         address client;
         uint paymentAmount;
-        uint status; // 0: created, 1: accepted, 2: completed, 3: disputed
+        uint status /* 0: created, 1: accepted by the freelancer, 2: completed, 3: disputed, 4: cancelled, 5: pending the freelancer acceptance */;
     }
 
     struct Payment {
         uint amount;
-        uint status; // 0: created, 1: released, 2: disputed
+        uint status /* 0: created, 1: accepted by the freelancer, 2: completed, 3: disputed, 4: cancelled, 5: pending the freelancer acceptance */;
         address client;
         address freelancer;
     }
@@ -33,9 +33,16 @@ contract JobMarketplaceContract {
     //Defining variables -------------------------------------------------------
     JobOffer[] public jobOffers;
 
+    mapping(address => bool) public registeredFreeLancers;
+
     //Defining functions -------------------------------------------------------
 
-    //The freelancer will create a job offer
+    //The freelancer/leader will register
+    function registerFreelancer() public {
+        registeredFreeLancers[msg.sender] = true;
+    }
+
+    //The freelancer/leader will create a job offer
     function createJobOffer(
         string memory _title,
         string memory _description,
@@ -50,6 +57,11 @@ contract JobMarketplaceContract {
             paymentAmount: _paymentAmount,
             status: 0
         }); */
+        require(
+            registeredFreeLancers[msg.sender] == true,
+            "Only registered freelancers can create job offers"
+        );
+
         jobOffers.push(
             JobOffer(
                 jobOffers.length,
@@ -70,9 +82,9 @@ contract JobMarketplaceContract {
         );
     }
 
-    //The client will accept a job offer
+    //The client will choose a job offer
 
-    function acceptJobOffer(uint _jobOfferId) public payable {
+    function clientPickJobOffer(uint _jobOfferId) public payable {
         require(
             msg.sender != jobOffers[_jobOfferId].freelancer,
             "The freelancer cannot accept his own job offer"
@@ -100,5 +112,13 @@ contract JobMarketplaceContract {
             "The job offer must be in accepted status"
         );
         jobOffers[_jobOfferId].status = 2;
+    }
+
+    function cancelJobOffer(uint _jobOfferId) public {
+        require(
+            jobOffers[_jobOfferId].status == 1 ||
+                jobOffers[_jobOfferId].status == 5,
+            "The job offer must be in accepted or pending status"
+        );
     }
 }
