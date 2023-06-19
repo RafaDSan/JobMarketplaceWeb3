@@ -73,6 +73,7 @@ contract JobMarketplaceContract {
                 0
             )
         );
+
         emit jobOfferCreated(
             jobOffers[jobOffers.length - 1].id,
             jobOffers[jobOffers.length - 1].title,
@@ -114,7 +115,7 @@ contract JobMarketplaceContract {
         jobOffers[_jobOfferId].status = 2;
     }
 
-    function cancelJobOffer(uint _jobOfferId) public {
+    function cancelJobOffer(uint _jobOfferId) public view {
         require(
             jobOffers[_jobOfferId].status == 1 ||
                 jobOffers[_jobOfferId].status == 5,
